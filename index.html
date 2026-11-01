@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Determinante por cofactores</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17241f;
+      --muted: #64736c;
+      --paper: #f5f4ef;
+      --card: #fffefa;
+      --line: #e4e6df;
+      --green: #176b4a;
+      --green-dark: #10543a;
+      --mint: #e9f4ed;
+      --orange: #e79a54;
+      --shadow: 0 18px 55px rgba(28, 48, 37, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(ellipse at 86% 0%, rgba(231, 154, 84, .12), transparent 28rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, select, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .page { width: min(1060px, calc(100% - 40px)); margin: 0 auto; padding: 46px 0 64px; }
+
+    .topline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--green);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .mark {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      border-radius: 9px;
+      background: var(--green);
+      color: white;
+      font-family: Georgia, serif;
+      font-size: 1.2rem;
+      letter-spacing: 0;
+    }
+
+    header { margin-bottom: 30px; }
+
+    h1 {
+      max-width: 700px;
+      margin: 18px 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.4rem, 6vw, 4.4rem);
+      font-weight: 500;
+      letter-spacing: -.055em;
+      line-height: 1.02;
+    }
+
+    .intro { max-width: 590px; margin: 0; color: var(--muted); font-size: 1.05rem; }
+
+    .layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(290px, .82fr); gap: 20px; align-items: start; }
+
+    .card {
+      border: 1px solid rgba(220, 224, 215, .9);
+      border-radius: 20px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+
+    .matrix-card { padding: clamp(20px, 4vw, 32px); }
+    .result-card { padding: clamp(20px, 3vw, 28px); }
+
+    .section-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 20px; }
+    h2 { margin: 0; font-size: 1.12rem; letter-spacing: -.02em; }
+    .section-kicker { color: var(--muted); font-size: .83rem; }
+
+    .size-control { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: .88rem; }
+    select {
+      min-height: 40px;
+      padding: 0 32px 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    .matrix-scroll { overflow-x: auto; padding: 2px 2px 12px; }
+    .matrix-grid {
+      display: grid;
+      width: max-content;
+      max-width: 100%;
+      gap: 8px;
+      position: relative;
+      padding: 8px 14px;
+    }
+
+    .matrix-grid::before, .matrix-grid::after {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      border-color: #9bab9f;
+      border-style: solid;
+      content: "";
+    }
+    .matrix-grid::before { left: 0; border-width: 1.5px 0 1.5px 1.5px; border-radius: 5px 0 0 5px; }
+    .matrix-grid::after { right: 0; border-width: 1.5px 1.5px 1.5px 0; border-radius: 0 5px 5px 0; }
+
+    .matrix-cell {
+      width: clamp(48px, 8vw, 62px);
+      height: 50px;
+      padding: 0 5px;
+      border: 1px solid #e6e9e3;
+      border-radius: 9px;
+      outline: none;
+      background: #fbfcf9;
+      color: var(--ink);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .matrix-cell:hover { border-color: #bdcfc2; }
+    .matrix-cell:focus { border-color: var(--green); background: white; box-shadow: 0 0 0 3px rgba(23, 107, 74, .12); }
+
+    .matrix-note { display: flex; gap: 8px; align-items: flex-start; margin: 9px 0 22px; color: var(--muted); font-size: .82rem; }
+    .matrix-note span { color: var(--green); font-weight: 800; }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .button {
+      display: inline-flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 16px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      font-size: .9rem;
+      font-weight: 700;
+      transition: background .15s, transform .15s, border-color .15s;
+    }
+    .button:active { transform: translateY(1px); }
+    .button-primary { background: var(--green); color: white; }
+    .button-primary:hover { background: var(--green-dark); }
+    .button-secondary { border-color: var(--line); background: white; color: var(--ink); }
+    .button-secondary:hover { border-color: #bdcfc2; background: #f8faf6; }
+
+    .result-card { min-height: 260px; }
+    .result-label { color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+    .result-value {
+      overflow-wrap: anywhere;
+      margin: 8px 0 18px;
+      color: var(--green);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(3rem, 7vw, 4.8rem);
+      letter-spacing: -.06em;
+      line-height: 1.1;
+    }
+    .result-divider { height: 1px; margin: 20px 0; background: var(--line); }
+    .steps-title { margin: 0 0 12px; font-size: .92rem; }
+    .steps { display: grid; gap: 10px; }
+    .step {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+      color: #43534b;
+      font-size: .85rem;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    .step-number {
+      display: grid;
+      width: 25px;
+      height: 25px;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--mint);
+      color: var(--green);
+      font-size: .75rem;
+      font-weight: 800;
+    }
+    .share-status { min-height: 1.25rem; margin: 12px 0 0; color: var(--green); font-size: .82rem; }
+    .error { color: #a23d32; }
+    .share-link { width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); font-size: .82rem; }
+
+    .method {
+      display: flex;
+      gap: 15px;
+      align-items: flex-start;
+      margin-top: 20px;
+      padding: 17px 19px;
+      border: 1px solid #e6e9e3;
+      border-radius: 14px;
+      background: rgba(255, 254, 250, .65);
+      color: var(--muted);
+      font-size: .87rem;
+    }
+    .method strong { flex: 0 0 auto; color: var(--ink); }
+    .method p { margin: 0; }
+    .formula { color: var(--green); font-family: Georgia, "Times New Roman", serif; font-size: 1.08rem; white-space: nowrap; }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 28px, 560px); padding-top: 28px; }
+      .layout { grid-template-columns: 1fr; }
+      .result-card { min-height: auto; }
+      .method { flex-direction: column; gap: 5px; }
+    }
+
+    @media (max-width: 390px) {
+      .section-heading { align-items: flex-start; flex-direction: column; }
+      .matrix-cell { width: 45px; height: 46px; }
+      .actions .button { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="topline"><span class="mark" aria-hidden="true">∑</span> Herramienta de álgebra lineal</div>
+      <h1>Determinantes,<br>paso a paso.</h1>
+      <p class="intro">Calcula el determinante de una matriz cuadrada usando expansión por cofactores. Cada término queda explicado para que puedas seguir el procedimiento.</p>
+    </header>
+
+    <div class="layout">
+      <section class="card matrix-card" aria-labelledby="matrix-title">
+        <div class="section-heading">
+          <div>
+            <h2 id="matrix-title">Tu matriz</h2>
+            <div class="section-kicker">Escribe números enteros o decimales</div>
+          </div>
+          <label class="size-control" for="matrix-size">Tamaño
+            <select id="matrix-size" aria-label="Tamaño de la matriz">
+              <option value="1">1 × 1</option>
+              <option value="2">2 × 2</option>
+              <option value="3" selected>3 × 3</option>
+              <option value="4">4 × 4</option>
+              <option value="5">5 × 5</option>
+              <option value="6">6 × 6</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="matrix-scroll">
+          <div id="matrix-grid" class="matrix-grid" role="group" aria-label="Entradas de la matriz"></div>
+        </div>
+        <p class="matrix-note"><span aria-hidden="true">↳</span> El resultado se actualiza al cambiar cualquier entrada.</p>
+        <div class="actions">
+          <button id="share-button" class="button button-primary" type="button">
+            <svg aria-hidden="true" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.7 6.8-4.4M8.6 13.3l6.8 4.4"></path></svg>
+            Copiar enlace para compartir
+          </button>
+          <button id="reset-button" class="button button-secondary" type="button">Restablecer ejemplo</button>
+        </div>
+        <p id="share-status" class="share-status" role="status" aria-live="polite"></p>
+        <input id="share-link" class="share-link" type="text" aria-label="Enlace para copiar manualmente" readonly hidden>
+      </section>
+
+      <section class="card result-card" aria-labelledby="result-title">
+        <div class="result-label" id="result-title">Determinante</div>
+        <div class="result-value" id="result-value" aria-live="polite">—</div>
+        <div class="result-divider"></div>
+        <h2 class="steps-title">Expansión por la primera fila</h2>
+        <div id="steps" class="steps"></div>
+      </section>
+    </div>
+
+    <aside class="method">
+      <strong>Regla de cofactores</strong>
+      <p>Se multiplica cada elemento de la primera fila por su cofactor y se suman los resultados. El signo alterna en cada columna: <span class="formula">+, −, +, −…</span></p>
+    </aside>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const example = [
+        [2, 1, 3],
+        [0, -1, 4],
+        [5, 2, 0]
+      ];
+      const sizeSelect = document.getElementById("matrix-size");
+      const grid = document.getElementById("matrix-grid");
+      const resultValue = document.getElementById("result-value");
+      const steps = document.getElementById("steps");
+      const shareStatus = document.getElementById("share-status");
+
+      function isValidMatrix(matrix) {
+        return Array.isArray(matrix)
+          && matrix.length >= 1
+          && matrix.length <= 6
+          && matrix.every(row => Array.isArray(row)
+            && row.length === matrix.length
+            && row.every(value => typeof value === "number" && Number.isFinite(value)));
+      }
+
+      function readSharedMatrix() {
+        const encoded = new URLSearchParams(window.location.search).get("m");
+        if (!encoded) return null;
+        try {
+          const matrix = JSON.parse(encoded);
+          return isValidMatrix(matrix) ? matrix : null;
+        } catch {
+          return null;
+        }
+      }
+
+      function createMatrix(size, values) {
+        grid.replaceChildren();
+        grid.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+        for (let row = 0; row < size; row += 1) {
+          for (let column = 0; column < size; column += 1) {
+            const input = document.createElement("input");
+            input.className = "matrix-cell";
+            input.type = "number";
+            input.step = "any";
+            input.inputMode = "decimal";
+            input.value = values && values[row] ? String(values[row][column]) : "0";
+            input.setAttribute("aria-label", `Fila ${row + 1}, columna ${column + 1}`);
+            input.addEventListener("input", calculate);
+            grid.append(input);
+          }
+        }
+        calculate();
+      }
+
+      function readMatrix() {
+        const size = Number(sizeSelect.value);
+        const inputs = Array.from(grid.querySelectorAll("input"));
+        return Array.from({ length: size }, (_, row) =>
+          Array.from({ length: size }, (_, column) => {
+            const input = inputs[row * size + column];
+            if (input.value.trim() === "" || !input.validity.valid) return null;
+            const value = input.valueAsNumber;
+            return Number.isFinite(value) ? value : null;
+          })
+        );
+      }
+
+      function minor(matrix, excludedColumn) {
+        return matrix.slice(1).map(row =>
+          row.filter((_, column) => column !== excludedColumn)
+        );
+      }
+
+      function determinant(matrix) {
+        const size = matrix.length;
+        if (size === 1) return matrix[0][0];
+        if (size === 2) return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+
+        let total = 0;
+        for (let column = 0; column < size; column += 1) {
+          const sign = column % 2 === 0 ? 1 : -1;
+          total += sign * matrix[0][column] * determinant(minor(matrix, column));
+        }
+        return total;
+      }
+
+      function formatNumber(value) {
+        if (Object.is(value, -0)) value = 0;
+        const rounded = Number(value.toPrecision(10));
+        return new Intl.NumberFormat("es", { maximumSignificantDigits: 10 }).format(rounded);
+      }
+
+      function showError(message) {
+        resultValue.textContent = "—";
+        steps.replaceChildren();
+        const error = document.createElement("div");
+        error.className = "step error";
+        error.textContent = message;
+        steps.append(error);
+      }
+
+      function calculate() {
+        const matrix = readMatrix();
+        const missingValue = matrix.some(row => row.some(value => value === null));
+        if (missingValue) {
+          showError("Completa cada entrada con un número válido.");
+          return;
+        }
+
+        const value = determinant(matrix);
+        if (!Number.isFinite(value)) {
+          showError("El resultado excede el rango numérico disponible.");
+          return;
+        }
+
+        resultValue.textContent = formatNumber(value);
+        steps.replaceChildren();
+        if (matrix.length === 1) {
+          appendStep(`det(A) = ${formatNumber(matrix[0][0])}`);
+          return;
+        }
+
+        const terms = matrix[0].map((entry, column) => {
+          const sign = column % 2 === 0 ? 1 : -1;
+          const minorValue = determinant(minor(matrix, column));
+          const contribution = sign * entry * minorValue;
+          const cofactorSign = sign === 1 ? "+1" : "−1";
+          return `a₁${column + 1} × C₁${column + 1} = ${formatNumber(entry)} × (${cofactorSign} × ${formatNumber(minorValue)}) = ${formatNumber(contribution)}`;
+        });
+
+        terms.forEach((term, index) => {
+          const step = document.createElement("div");
+          step.className = "step";
+          const number = document.createElement("span");
+          number.className = "step-number";
+          number.textContent = String(index + 1);
+          const description = document.createElement("span");
+          description.textContent = term;
+          step.append(number, description);
+          steps.append(step);
+        });
+      }
+
+      function appendStep(text) {
+        const step = document.createElement("div");
+        step.className = "step";
+        const number = document.createElement("span");
+        number.className = "step-number";
+        number.textContent = "1";
+        const description = document.createElement("span");
+        description.textContent = text;
+        step.append(number, description);
+        steps.append(step);
+      }
+
+      async function copyText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+
+        const temporaryInput = document.createElement("textarea");
+        temporaryInput.value = text;
+        temporaryInput.setAttribute("readonly", "");
+        temporaryInput.style.position = "fixed";
+        temporaryInput.style.opacity = "0";
+        document.body.append(temporaryInput);
+        temporaryInput.select();
+        const copied = document.execCommand("copy");
+        temporaryInput.remove();
+        if (!copied) throw new Error("El navegador no permitió copiar el enlace.");
+      }
+
+      sizeSelect.addEventListener("change", () => {
+        createMatrix(Number(sizeSelect.value));
+        shareStatus.textContent = "";
+      });
+
+      document.getElementById("reset-button").addEventListener("click", () => {
+        sizeSelect.value = String(example.length);
+        createMatrix(example.length, example);
+        shareStatus.textContent = "";
+      });
+
+      document.getElementById("share-button").addEventListener("click", async () => {
+        const shareLink = document.getElementById("share-link");
+        shareLink.hidden = true;
+        const matrix = readMatrix();
+        if (matrix.some(row => row.some(value => value === null))) {
+          shareStatus.className = "share-status error";
+          shareStatus.textContent = "Completa la matriz antes de compartirla.";
+          return;
+        }
+
+        const url = new URL(window.location.href);
+        url.search = "";
+        url.searchParams.set("m", JSON.stringify(matrix));
+        try {
+          await copyText(url.href);
+          shareStatus.className = "share-status";
+          shareStatus.textContent = window.location.protocol === "file:"
+            ? "Enlace copiado. Para que otros puedan abrirlo, publica primero esta página en un sitio web."
+            : "Enlace copiado. Al abrirlo, se mostrará esta misma matriz.";
+        } catch (error) {
+          shareStatus.className = "share-status error";
+          shareLink.value = url.href;
+          shareLink.hidden = false;
+          shareLink.focus();
+          shareLink.select();
+          shareStatus.textContent = `${error.message} Copia el enlace del campo siguiente.`;
+        }
+      });
+
+      const sharedMatrix = readSharedMatrix();
+      const initialMatrix = sharedMatrix || example;
+      sizeSelect.value = String(initialMatrix.length);
+      createMatrix(initialMatrix.length, initialMatrix);
+      if (new URLSearchParams(window.location.search).has("m") && !sharedMatrix) {
+        shareStatus.className = "share-status error";
+        shareStatus.textContent = "El enlace contiene una matriz no válida. Se cargó el ejemplo.";
+      }
+    })();
+  </script>
+</body>
+</html>
